@@ -119,17 +119,24 @@ export const builtins = (() => {
     env['symbol?'] = a => a instanceof String;
     env['globals'] = () => Object.keys(env);
 
+    // we're just here so we show up in the globals list
+    env['quote'] = () => SyntaxError("miscalled builtin");
+    env['if'] = () => SyntaxError("miscalled builtin");
+    env['set!'] = () => SyntaxError("miscalled builtin");
+    env['lambda'] = () => SyntaxError("miscalled builtin");
+    env['exit'] = () => SyntaxError("miscalled builtin");
+
     return new Env(null, null, env);
 })();
 
 export const nanoEval = (x, env= builtins) => {
-    console.log(JSON.stringify(x));
-    if(env.outer !== undefined) {
-        console.log(env.map);
-    } else {
-        console.log("ROOT");
-    }
-    console.log("=====");
+    // console.log(JSON.stringify(x));
+    // if(env.outer !== undefined) {
+    //     console.log(env.map);
+    // } else {
+    //     console.log("ROOT");
+    // }
+    // console.log("=====");
     if(typeof x === 'string') {
         if (x[0] === '"' && x[x.length - 1] === '"') {
             return x;
@@ -160,6 +167,8 @@ export const nanoEval = (x, env= builtins) => {
     } else if (op === 'lambda') {
         let [params, body] = args;
         return new Proc(params, body, env);
+    }  else if (op === 'exit') {
+        process.exit(0);
     } else {
         let proc = nanoEval(op, env);
         let vals = args.map(arg => nanoEval(arg, env));
@@ -186,7 +195,10 @@ export const repl = async (prompt='nanolisp.js>') => {
                     process.exit(0);
                 }
                 try {
-                    console.log(nanoEval(parse(answer)));
+                    let data = nanoEval(parse(answer));
+                    if(data !== undefined) {
+                        console.log(data);
+                    }
                 } catch (e) {
                     console.error(e);
                 }
